@@ -32,21 +32,24 @@ STATUS_MSG = """
 ━━━━━━━━━━━━━━━━━━
 ⚡ Bot is LIVE
 🟢 No maintenance
-🔥 All features working properly
+🔥 Everything working perfectly
 """
 
 HELP_MSG = """
-🛠 **Help - Available Commands**
-/start - Show bot status
-/about - About this bot
-/help - Help menu
-/osint - Open OSINT Menu
+🛠 **Commands**
+/start - Bot status
+/help - Commands menu
+/about - About bot
+/osint - OSINT menu
+/broadcast - OWNER only (Reply to a message)
 """
 
 ABOUT_MSG = """
 💀 **Sevr0c–Moros AI**
-👑 Made by: @iamorosss & @sevr0c
-⚠️ Educational purpose only
+Creators:
+👑 @iamorosss
+⚡ @sevr0c
+⚠️ Education purpose only
 """
 
 DB_FILE = "users.json"
@@ -64,7 +67,7 @@ def add_user(uid):
         save_users(u)
 
 
-session_messages = {}  # Chat memory
+session_messages = {}  # Chat memory (AI)
 
 
 # ========== FORCE JOIN CHECK ========== #
@@ -92,12 +95,8 @@ async def send_force_join(update, ctx):
         [InlineKeyboardButton("⭕ JOINED ❌", callback_data="check_join")]
     ]
 
-    await update.message.reply_photo(
-        photo=PHOTO_PATH,
-        caption=CAPTION,
-        reply_markup=InlineKeyboardMarkup(kb),
-        parse_mode="Markdown"
-    )
+    await update.message.reply_photo(PHOTO_PATH, CAPTION,
+        InlineKeyboardMarkup(kb), parse_mode="Markdown")
 
 
 # ========== COMMANDS ========== #
@@ -121,6 +120,7 @@ async def about_cmd(update, ctx):
     await update.message.reply_text(ABOUT_MSG, parse_mode="Markdown")
 
 
+# ========== OSINT ========== #
 async def osint_cmd(update, ctx):
     uid = update.message.from_user.id
     if not await is_joined_all(uid, ctx):
@@ -131,7 +131,7 @@ async def osint_cmd(update, ctx):
         [InlineKeyboardButton("📱 Phone Lookup", callback_data="osint_phone")],
         [InlineKeyboardButton("🔙 Back", callback_data="osint_back")]
     ]
-    await update.message.reply_text("🕵️ Select OSINT Service:", reply_markup=InlineKeyboardMarkup(kb))
+    await update.message.reply_text("🕵️ Select OSINT:", reply_markup=InlineKeyboardMarkup(kb))
 
 
 # ========== CALLBACK HANDLER ========== #
@@ -143,46 +143,73 @@ async def callback_handler(update, ctx):
 
     if q.data == "check_join":
         if not await is_joined_all(uid, ctx):
-            await q.answer("❌ Not joined all!", show_alert=True)
+            await q.answer("❌ Join all channels!", show_alert=True)
             return
         await q.edit_message_reply_markup(
             InlineKeyboardMarkup([[InlineKeyboardButton("🟢 JOINED ✔", callback_data="none")]])
         )
-        await ctx.bot.send_message(uid, "🎉 Verified! Now you can use the bot.")
+        await ctx.bot.send_message(uid, "🎉 Verified! Enjoy bot.")
         return
 
     if q.data == "osint_phone":
         ctx.user_data['mode'] = "phone"
-        await ctx.bot.send_message(uid, "📱 Send phone number to lookup:")
+        await ctx.bot.send_message(uid, "📞 Send phone number:")
         return
 
     if q.data == "osint_back":
         ctx.user_data['mode'] = None
-        await ctx.bot.send_message(uid, "🔙 Back.")
+        await ctx.bot.send_message(uid, "🔙 Back to menu.")
         return
 
 
-# ========== AI SYSTEM WITH MEMORY ========== #
+# ========== AI WITH MEMORY ========== #
 async def ai_response(uid, text):
     if uid not in session_messages:
         session_messages[uid] = []
 
     session_messages[uid].append({"role": "user", "content": text})
 
-    try:
-        out = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=session_messages[uid]
-        )
-        reply = out.choices[0].message.content
-        session_messages[uid].append({"role": "assistant", "content": reply})
-        return reply
+    out = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=session_messages[uid]
+    )
 
-    except Exception as e:
-        return f"⚠️ AI Error: `{e}`"
+    reply = out.choices[0].message.content
+    session_messages[uid].append({"role": "assistant", "content": reply})
+    return reply
 
 
-# ========== MAIN MESSAGE HANDLER ========== #
+# ========== BROADCAST (UPGRADED) ========== #
+async def broadcast_cmd(update, ctx):
+    uid = update.message.from_user.id
+
+    if uid not in OWNER_IDS:
+        await update.message.reply_text("❌ Only Owner can use this.")
+        return
+
+    if not update.message.reply_to_message:
+        await update.message.reply_text("📢 Reply to a message and send /broadcast")
+        return
+
+    msg = update.message.reply_to_message
+    users = load_users()
+    sent = 0
+
+    for u in users:
+        try:
+            await ctx.bot.copy_message(
+                chat_id=u,
+                from_chat_id=msg.chat_id,
+                message_id=msg.message_id
+            )
+            sent += 1
+        except:
+            pass
+
+    await update.message.reply_text(f"📡 Broadcast sent to {sent} users ✔")
+
+
+# ========== MAIN TEXT HANDLER ========== #
 async def handle_msg(update, ctx):
     uid = update.message.from_user.id
     text = update.message.text
@@ -193,7 +220,7 @@ async def handle_msg(update, ctx):
         return
 
     if ctx.user_data.get('mode') == "phone":
-        await update.message.reply_text(f"📞 OSINT Enabled — Coming soon 🔍\nYou entered: `{text}`")
+        await update.message.reply_text(f"📞 Saved! Lookup soon: `{text}`")
         ctx.user_data['mode'] = None
         return
 
@@ -202,14 +229,14 @@ async def handle_msg(update, ctx):
     await update.message.reply_text(reply)
 
 
-# ========== RUN ========== #
+# ========== RUN BOT ========== #
 app = ApplicationBuilder().token(BOT_TOKEN).build()
-
 app.add_handler(CommandHandler("start", start_cmd))
 app.add_handler(CommandHandler("help", help_cmd))
 app.add_handler(CommandHandler("about", about_cmd))
 app.add_handler(CommandHandler("osint", osint_cmd))
+app.add_handler(CommandHandler("broadcast", broadcast_cmd))
 app.add_handler(CallbackQueryHandler(callback_handler))
-app.add_handler(MessageHandler(filters.TEXT, handle_msg))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_msg))
 
 app.run_polling()

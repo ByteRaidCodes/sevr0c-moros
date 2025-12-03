@@ -40,10 +40,8 @@ HELP_MSG = """
 /start - Bot status
 /help - Commands menu
 /about - About bot
-/osint - OSINT tools
 /broadcast - OWNER only (Reply to msg)
 /forget - Clear saved memory
-/stats - Total users count
 """
 
 ABOUT_MSG = """
@@ -240,3 +238,4 @@ app.add_handler(CallbackQueryHandler(callback_handler))
 app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_msg))
 
 app.run_polling()
+

@@ -22,10 +22,17 @@ CHANNELS = [
     (-1002733321153, "🚀", "https://t.me/MethRoot"),
 ]
 
-CAPTION = """
-💀 **Sevr0c–Moros AI ⚡**
-Join all channels first to use the bot.
-"""
+CAPTION = """ 💀 Welcome to the Sevr0c–Moros AI ⚡
+
+Inside this channel, you’ll get access to advanced scripts, ethical hacking tutorials, powerful methods, hidden tricks, important security tools, active lessons, and real techniques used by professionals.
+
+We drop content that actually works — no fake stuff, no useless noise.
+
+If you want practical hacking knowledge, real-world tips, updated methods, and exclusive scripts, this is the right place.
+
+⚠️ Everything taught here is for ethical & educational purposes only.
+
+👉 Join now and unlock the skills others hide."""
 
 STATUS_MSG = """
 💀 **Sevr0c–Moros AI Status**
@@ -207,4 +214,5 @@ app.add_handler(CallbackQueryHandler(callback_handler))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_msg))
 
 app.run_polling()
+
 

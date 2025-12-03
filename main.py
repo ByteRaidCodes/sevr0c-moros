@@ -16,7 +16,7 @@ OWNER_IDS = [8180209483, 7926496057]
 PHOTO_PATH = "https://i.postimg.cc/76L59xVj/03cf19b6-e979-4d2f-9d6f-3ba2469e60c2.jpg"
 
 CHANNELS = [
-    (-1002090323246, "⚡", "https://t.me/CodeTweakz"),
+    (-1002090323246, "⚡", "https://t.me/+2CuRAk4cJVUzMDY9"),
     (-1002145075313, "🔥", "https://t.me/Scripts0x"),
     (-1003279886990, "💎", "https://t.me/techmoros"),
     (-1002733321153, "🚀", "https://t.me/MethRoot"),
@@ -207,3 +207,4 @@ app.add_handler(CallbackQueryHandler(callback_handler))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_msg))
 
 app.run_polling()
+
